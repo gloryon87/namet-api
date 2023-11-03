@@ -23,6 +23,7 @@ const ordersSchema = new mongoose.Schema({
   state: String,
   priority: Boolean,
   deadline: Date,
+  comment: String,
 }, {
   collection: 'orders'
 }

@@ -32,7 +32,8 @@ body:
   "info": "string",
   "state": "в роботі",
   "priority": true,
-  "deadline": "2023-12-27T18:20:58Z"
+  "deadline": "2023-12-27T18:20:58Z",
+  "comment": "comment"
 }
 
 <!-- PUT: Оновити існуюче замовлення -->
