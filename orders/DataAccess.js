@@ -5,6 +5,10 @@ class OrdersDataAccess {
     return await Order.find()
   }
 
+  async getOrder (id) {
+    return await Order.find({ _id: id })
+  }
+
   async addNewOrder (body) {
     return await new Order(body).save()
   }
@@ -20,7 +24,6 @@ class OrdersDataAccess {
   async deleteOrder (id) {
     return await Order.deleteOne({ _id: id })
   }
-
 }
 
 export default OrdersDataAccess

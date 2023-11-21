@@ -53,6 +53,18 @@ app.get('/api/orders', async (req, res) => {
   }
 })
 
+// GET: Отримати одне замовлення
+app.get('/api/orders/:id', async (req, res) => {
+  try {
+    const orderId = req.params.id
+    const order = await ordersData.getOrder(orderId)
+    res.json(order)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
 // GET: Пошук за параметрами
 app.get('/api/orders', async (req, res) => {
   try {
