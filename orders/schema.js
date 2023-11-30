@@ -1,33 +1,40 @@
 import mongoose from 'mongoose'
 
-const ordersSchema = new mongoose.Schema({
-   contacts: String,
-  goods: [
-    {
-      _id: mongoose.Schema.Types.ObjectId,
-      a: Number,
-      b: Number,
-      qty: Number,
-      season: String,
-      material: String,
-      color: {
-        baige10: Number,
-        olive: Number,
-        brown: Number,
-      },
-      production: String,
-    },
-  ],
-  date: Date,
-  info: String,
-  state: String,
-  priority: Boolean,
-  deadline: Date,
-  comment: String,
-}, {
-  collection: 'orders'
-}
+const ordersSchema = new mongoose.Schema(
+  {
+    contacts: String,
+    goods: [
+      {
+        _id: mongoose.Schema.Types.ObjectId,
+        a: Number,
+        b: Number,
+        qty: Number,
+        season: String,
+        material: String,
+        color: [
+          {
+            name: String,
+            qty: Number,
+            divider: Number,
+            colorArea: Number
+          }
+        ],
+        goodArea: Number,
+        production: String
+      }
+    ],
+    date: Date,
+    info: String,
+    state: String,
+    priority: String,
+    deadline: Date,
+    comment: String
+  },
+  {
+    collection: 'orders'
+  }
 )
+
 
 const Order = mongoose.model('Orders', ordersSchema)
 

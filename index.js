@@ -84,22 +84,44 @@ app.get('/api/orders', async (req, res) => {
 // POST: Додати нове замовлення
 app.post('/api/orders', async (req, res) => {
   try {
-    const newOrderData = req.body // Отримайте дані для нового замовлення з запиту
+    const newOrderData = req.body
 
-    // Заберіть дані для goods та створіть новий _id для кожного елемента
-    const goodsWithId = newOrderData.goods.map(goodsItem => ({
-      ...goodsItem,
-      _id: new mongoose.Types.ObjectId() // Створення нового ObjectId
-    }))
+// Calculate and add new fields to each goods item
+const goodsWithId = newOrderData.goods.map(goodsItem => {
+  const goodArea = goodsItem.a * goodsItem.b * goodsItem.qty
 
-    // Створіть нове замовлення з оновленими goods
-    const newOrder = {
-      ...newOrderData,
-      goods: goodsWithId
+  // Calculate the sum of qty in the color array
+  const colorQtySum = goodsItem.color.reduce((sum, color) => sum + color.qty, 0)
+
+  // Calculate divider and colorArea for each color
+  const colorWithCalculation = goodsItem.color.map(color => {
+    const divider = colorQtySum
+    const colorArea = (goodArea * color.qty) / divider
+
+    return {
+      ...color,
+      divider,
+      colorArea
     }
+  })
 
-    const addedOrder = await ordersData.addNewOrder(newOrder)
-    res.json(addedOrder)
+  return {
+    ...goodsItem,
+    _id: new mongoose.Types.ObjectId(),
+    goodArea,
+    color: colorWithCalculation
+  }
+})
+
+// Create a new order with updated goods
+const newOrder = {
+  ...newOrderData,
+  goods: goodsWithId
+}
+
+const addedOrder = await ordersData.addNewOrder(newOrder)
+res.json(addedOrder)
+
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Помилка сервера' })
@@ -130,30 +152,6 @@ app.delete('/api/orders/:id', async (req, res) => {
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
-
-const order = {
-  "contacts": "0989880990 Слава",
-  "goods": [
-    {
-      "a": 4,
-      "b": 6,
-      "qty": 10,
-      "season": "осінь",
-      "material": "спанбонд",
-      "color": {
-        "baige10": 2,
-        "olive": 2,
-        "brown": 1
-      },
-      "production": "Коротич"
-    }
-  ],
-  "date": "2023-10-27T18:20:58Z",
-  "info": "string",
-  "state": "в роботі",
-  "priority": true,
-  "deadline": "2023-12-27T18:20:58Z"
-}
 
 // Залишки матеріалів
 
