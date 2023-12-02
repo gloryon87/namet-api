@@ -141,6 +141,62 @@ app.put('/api/orders/:id', async (req, res) => {
   }
 })
 
+// PUT видалити товар із замовлення
+app.put('/api/orders/:id/remove-good/:goodId', async (req, res) => {
+  try {
+    const orderId = req.params.id
+    const goodIdToRemove = req.params.goodId
+
+    const updatedOrder = await ordersData.removeGoodFromOrder(
+      orderId,
+      goodIdToRemove
+    )
+
+    res.json(updatedOrder)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+// PUT додати товар до замовлення
+app.put('/api/orders/:id/add-good', async (req, res) => {
+  try {
+    const orderId = req.params.id
+    const newGoodData = req.body
+
+    const updatedOrder = await ordersData.addGoodToOrder(orderId, newGoodData)
+
+    res.json(updatedOrder)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+// PUT редагувати товар в замовленні
+app.put('/api/orders/:orderId/goods/:goodId', async (req, res) => {
+  try {
+    const orderId = req.params.orderId
+    const goodId = req.params.goodId
+    const updatedGoodData = req.body
+
+    const updatedOrder = await ordersData.updateGoodInOrder(
+      orderId,
+      goodId,
+      updatedGoodData
+    )
+
+    res.json(updatedOrder)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+
+
+
 // DELETE: Видалити замовлення
 app.delete('/api/orders/:id', async (req, res) => {
   try {

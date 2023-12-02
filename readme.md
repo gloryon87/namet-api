@@ -53,6 +53,37 @@ body:
 "contacts": "0989880990 Слава"
 }
 
+<!-- PUT: видалити товар із замовлення -->
+/api/orders/:id/remove-good/:goodId
+
+<!-- PUT: додати товар до замовлення -->
+/api/orders/:id/add-good
+body:
+{
+    {
+      a: 4,
+      b: 10,
+      qty: 2,
+      season: 'весна',
+      material: 'спанбонд',
+      color: [Array],
+      production: 'Коротич'
+    }
+}
+
+<!-- PUT: редагувати товар в замовленні -->
+/api/orders/:orderId/goods/:goodId
+body: {
+      a: 4,
+      b: 10,
+      qty: 2,
+      season: 'весна',
+      material: 'спанбонд',
+      color: [Array],
+      goodArea: 80,
+      production: 'Коротич'
+    }
+
 <!-- DELETE: Видалити замовлення -->
 
 /api/orders/:id
