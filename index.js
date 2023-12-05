@@ -3,8 +3,8 @@ import cors from 'cors'
 import mongoose from 'mongoose'
 import 'dotenv/config'
 import OrdersDataAccess from './orders/DataAccess.js'
-import MaterialsDataAccess from './materials/DataAccess.js';
-import GoodsDataAccess from './goods/DataAccess.js';
+import MaterialsDataAccess from './materials/DataAccess.js'
+import GoodsDataAccess from './goods/DataAccess.js'
 
 // server
 
@@ -40,7 +40,7 @@ const main = async () => {
 main()
 
 // ЗАМОВЛЕННЯ
-const ordersData = new OrdersDataAccess
+const ordersData = new OrdersDataAccess()
 
 // GET: Отримати всі замовлення
 app.get('/api/orders', async (req, res) => {
@@ -86,42 +86,44 @@ app.post('/api/orders', async (req, res) => {
   try {
     const newOrderData = req.body
 
-// Calculate and add new fields to each goods item
-const goodsWithId = newOrderData.goods.map(goodsItem => {
-  const goodArea = goodsItem.a * goodsItem.b * goodsItem.qty
+    // Calculate and add new fields to each goods item
+    const goodsWithId = newOrderData.goods.map(goodsItem => {
+      const goodArea = goodsItem.a * goodsItem.b * goodsItem.qty
 
-  // Calculate the sum of qty in the color array
-  const colorQtySum = goodsItem.color.reduce((sum, color) => sum + color.qty, 0)
+      // Calculate the sum of qty in the color array
+      const colorQtySum = goodsItem.color.reduce(
+        (sum, color) => sum + color.qty,
+        0
+      )
 
-  // Calculate divider and colorArea for each color
-  const colorWithCalculation = goodsItem.color.map(color => {
-    const divider = colorQtySum
-    const colorArea = (goodArea * color.qty) / divider
+      // Calculate divider and colorArea for each color
+      const colorWithCalculation = goodsItem.color.map(color => {
+        const divider = colorQtySum
+        const colorArea = (goodArea * color.qty) / divider
 
-    return {
-      ...color,
-      divider,
-      colorArea
+        return {
+          ...color,
+          divider,
+          colorArea
+        }
+      })
+
+      return {
+        ...goodsItem,
+        _id: new mongoose.Types.ObjectId(),
+        goodArea,
+        color: colorWithCalculation
+      }
+    })
+
+    // Create a new order with updated goods
+    const newOrder = {
+      ...newOrderData,
+      goods: goodsWithId
     }
-  })
 
-  return {
-    ...goodsItem,
-    _id: new mongoose.Types.ObjectId(),
-    goodArea,
-    color: colorWithCalculation
-  }
-})
-
-// Create a new order with updated goods
-const newOrder = {
-  ...newOrderData,
-  goods: goodsWithId
-}
-
-const addedOrder = await ordersData.addNewOrder(newOrder)
-res.json(addedOrder)
-
+    const addedOrder = await ordersData.addNewOrder(newOrder)
+    res.json(addedOrder)
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Помилка сервера' })
@@ -164,6 +166,8 @@ app.put('/api/orders/:id/add-good', async (req, res) => {
   try {
     const orderId = req.params.id
     const newGoodData = req.body
+    newGoodData._id = new mongoose.Types.ObjectId()
+    newGoodData.goodArea = newGoodData.a * newGoodData.b * newGoodData.qty
 
     const updatedOrder = await ordersData.addGoodToOrder(orderId, newGoodData)
 
@@ -193,9 +197,6 @@ app.put('/api/orders/:orderId/goods/:goodId', async (req, res) => {
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
-
-
-
 
 // DELETE: Видалити замовлення
 app.delete('/api/orders/:id', async (req, res) => {
@@ -255,27 +256,26 @@ app.put('/api/materials/:id', async (req, res) => {
 // DELETE: Видалити матеріал
 app.delete('/api/materials/:id', async (req, res) => {
   try {
-    const materialId = req.params.id;
-    const deletionResult = await materialsData.deleteMaterial(materialId);
-    res.json(deletionResult);
+    const materialId = req.params.id
+    const deletionResult = await materialsData.deleteMaterial(materialId)
+    res.json(deletionResult)
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Помилка сервера' });
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
   }
-});
+})
 
 // GET: Пошук матеріалів за параметрами
 app.get('/api/materials/search', async (req, res) => {
   try {
-    const searchParams = req.query; // Отримайте параметри пошуку з запиту
-    const foundMaterials = await materialsData.findMaterial(searchParams);
-    res.json(foundMaterials);
+    const searchParams = req.query // Отримайте параметри пошуку з запиту
+    const foundMaterials = await materialsData.findMaterial(searchParams)
+    res.json(foundMaterials)
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Помилка сервера' });
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
   }
-});
-
+})
 
 // Товари на складі
 
