@@ -13,7 +13,7 @@ class OrdersDataAccess {
   async addNewOrder (body) {
     return await new Order(body).save()
   }
-
+  
   async findOrder (body) {
     return await Order.find(body)
   }
@@ -61,6 +61,7 @@ class OrdersDataAccess {
     }
 
     const goodToUpdate = order.goods.id(goodId);
+    console.log(goodId)
 
     // Перевірити, чи товар знайдено
     if (!goodToUpdate) {

@@ -99,7 +99,7 @@ app.post('/api/orders', async (req, res) => {
       // Calculate divider and colorArea for each color
       const colorWithCalculation = goodsItem.color.map(color => {
         const divider = colorQtySum
-        const colorArea = (goodArea * color.qty) / divider
+        const colorArea = Math.round(((goodArea * color.qty) / divider) * 10) / 10
 
         return {
           ...color,
@@ -123,7 +123,7 @@ app.post('/api/orders', async (req, res) => {
     }
 
     const addedOrder = await ordersData.addNewOrder(newOrder)
-    res.json(addedOrder)
+    res.json({ orderId: addedOrder._id, ...addedOrder })
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Помилка сервера' })
@@ -169,6 +169,26 @@ app.put('/api/orders/:id/add-good', async (req, res) => {
     newGoodData._id = new mongoose.Types.ObjectId()
     newGoodData.goodArea = newGoodData.a * newGoodData.b * newGoodData.qty
 
+    // Calculate the sum of qty in the color array
+    const colorQtySum = newGoodData.color.reduce(
+      (sum, color) => sum + color.qty,
+      0
+    )
+
+    // Calculate divider and colorArea for each color
+    const colorWithCalculation = newGoodData.color.map(color => {
+      const divider = colorQtySum
+      const colorArea =
+        Math.round(((newGoodData.goodArea * color.qty) / divider) * 10) / 10
+
+      return {
+        ...color,
+        divider,
+        colorArea
+      }
+    })
+    newGoodData.color = colorWithCalculation
+
     const updatedOrder = await ordersData.addGoodToOrder(orderId, newGoodData)
 
     res.json(updatedOrder)
@@ -184,6 +204,28 @@ app.put('/api/orders/:orderId/goods/:goodId', async (req, res) => {
     const orderId = req.params.orderId
     const goodId = req.params.goodId
     const updatedGoodData = req.body
+    updatedGoodData.goodArea =
+      updatedGoodData.a * updatedGoodData.b * updatedGoodData.qty
+    
+    // Calculate the sum of qty in the color array
+    const colorQtySum = updatedGoodData.color.reduce(
+      (sum, color) => sum + color.qty,
+      0
+    )
+    // Calculate divider and colorArea for each color
+    const colorWithCalculation = updatedGoodData.color?.map(color => {
+      const divider = colorQtySum
+      const colorArea =
+        Math.round(((updatedGoodData.goodArea * color.qty) / divider) * 10) /
+        10
+      return {
+        ...color,
+        divider,
+        colorArea
+      }
+    })
+
+    updatedGoodData.color = colorWithCalculation || []
 
     const updatedOrder = await ordersData.updateGoodInOrder(
       orderId,

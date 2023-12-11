@@ -79,7 +79,7 @@ body: {
       qty: 2,
       season: 'весна',
       material: 'спанбонд',
-      color: [Array],
+      color: [],
       goodArea: 80,
       production: 'Коротич'
     }
