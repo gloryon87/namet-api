@@ -35,23 +35,12 @@ const main = async () => {
     console.error(err)
     process.exit(1)
   }
-}
+} 
 
 main()
 
 // ЗАМОВЛЕННЯ
 const ordersData = new OrdersDataAccess()
-
-// GET: Отримати всі замовлення
-app.get('/api/orders', async (req, res) => {
-  try {
-    const allOrders = await ordersData.getAllOrders()
-    res.json(allOrders)
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: 'Помилка сервера' })
-  }
-})
 
 // GET: Отримати одне замовлення
 app.get('/api/orders/:id', async (req, res) => {
@@ -65,15 +54,54 @@ app.get('/api/orders/:id', async (req, res) => {
   }
 })
 
-// GET: Пошук за параметрами
+// GET: Отримати всі замовлення або Пошук за параметрами
 app.get('/api/orders', async (req, res) => {
   try {
-    const searchParams = req.query // Отримання параметрів запиту з URL
+    const searchParams = req.query
 
-    // Виклик методу для пошуку замовлень за параметрами
-    const foundOrders = await ordersData.findOrdersByParams(searchParams)
+    // Decode URL-encoded components
+    for (const key in searchParams) {
+      searchParams[key] = decodeURIComponent(searchParams[key])
 
-    res.json(foundOrders)
+      // Конвертація числових значень
+      if (!isNaN(searchParams[key])) {
+        searchParams[key] = +searchParams[key]
+      }
+    }
+
+    let resultOrders
+
+    if (Object.keys(searchParams).length === 0) {
+      // If there are no search parameters, get all orders
+      resultOrders = await ordersData.getAllOrders()
+    } else {
+      // If there are search parameters, construct a query object
+      const query = {}
+
+      // Check for priority parameter
+      if (searchParams.priority) {
+        query.priority = searchParams.priority
+      }
+
+      // Check for state parameter
+      if (searchParams.state) {
+        query.state = searchParams.state
+      }
+
+      // Check for search parameter
+      if (searchParams.search) {
+        // Search among 'info' and 'contacts' fields
+        query.$or = [
+          { info: { $regex: searchParams.search, $options: 'i' } },
+          { contacts: { $regex: searchParams.search, $options: 'i' } }
+        ]
+      }
+
+      // Find orders based on the constructed query
+      resultOrders = await ordersData.findOrder(query)
+    }
+
+    res.json(resultOrders)
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Помилка сервера' })
