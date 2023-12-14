@@ -73,7 +73,7 @@ app.get('/api/orders', async (req, res) => {
 
     if (Object.keys(searchParams).length === 0) {
       // If there are no search parameters, get all orders
-      resultOrders = await ordersData.getAllOrders()
+      resultOrders = (await ordersData.getAllOrders()).toReversed()
     } else {
       // If there are search parameters, construct a query object
       const query = {}
@@ -90,15 +90,18 @@ app.get('/api/orders', async (req, res) => {
 
       // Check for search parameter
       if (searchParams.search) {
-        // Search among 'info' and 'contacts' fields
+        // Search among 'info', 'contacts', 'goods.season', 'goods.material', and 'goods.production' fields
         query.$or = [
           { info: { $regex: searchParams.search, $options: 'i' } },
-          { contacts: { $regex: searchParams.search, $options: 'i' } }
+          { contacts: { $regex: searchParams.search, $options: 'i' } },
+          { 'goods.season': { $regex: searchParams.search, $options: 'i' } },
+          { 'goods.material': { $regex: searchParams.search, $options: 'i' } },
+          { 'goods.production': { $regex: searchParams.search, $options: 'i' } }
         ]
       }
 
       // Find orders based on the constructed query
-      resultOrders = await ordersData.findOrder(query)
+      resultOrders = (await ordersData.findOrder(query)).toReversed()
     }
 
     res.json(resultOrders)
@@ -107,6 +110,7 @@ app.get('/api/orders', async (req, res) => {
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
+
 // /api/orders?contacts=0989880990 Слава&state=в роботі
 
 // POST: Додати нове замовлення
