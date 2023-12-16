@@ -35,7 +35,7 @@ const main = async () => {
     console.error(err)
     process.exit(1)
   }
-} 
+}
 
 main()
 
@@ -72,8 +72,8 @@ app.get('/api/orders', async (req, res) => {
     let resultOrders
 
     if (Object.keys(searchParams).length === 0) {
-      // If there are no search parameters, get all orders
-      resultOrders = (await ordersData.getAllOrders()).toReversed()
+      // If there are no search parameters, get first 10 of all orders
+      resultOrders = (await ordersData.getAllOrders()).toReversed().slice(0, 10)
     } else {
       // If there are search parameters, construct a query object
       const query = {}
@@ -104,7 +104,14 @@ app.get('/api/orders', async (req, res) => {
       resultOrders = (await ordersData.findOrder(query)).toReversed()
     }
 
+    // Check for all parameter
+    let allResultOrders
+    if (searchParams.all) {
+      resultOrders = (await ordersData.getAllOrders()).toReversed()
+    }
+    
     res.json(resultOrders)
+
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Помилка сервера' })
@@ -131,7 +138,8 @@ app.post('/api/orders', async (req, res) => {
       // Calculate divider and colorArea for each color
       const colorWithCalculation = goodsItem.color.map(color => {
         const divider = colorQtySum
-        const colorArea = Math.round(((goodArea * color.qty) / divider) * 10) / 10
+        const colorArea =
+          Math.round(((goodArea * color.qty) / divider) * 10) / 10
 
         return {
           ...color,
@@ -238,7 +246,7 @@ app.put('/api/orders/:orderId/goods/:goodId', async (req, res) => {
     const updatedGoodData = req.body
     updatedGoodData.goodArea =
       updatedGoodData.a * updatedGoodData.b * updatedGoodData.qty
-    
+
     // Calculate the sum of qty in the color array
     const colorQtySum = updatedGoodData.color.reduce(
       (sum, color) => sum + color.qty,
@@ -248,8 +256,7 @@ app.put('/api/orders/:orderId/goods/:goodId', async (req, res) => {
     const colorWithCalculation = updatedGoodData.color?.map(color => {
       const divider = colorQtySum
       const colorArea =
-        Math.round(((updatedGoodData.goodArea * color.qty) / divider) * 10) /
-        10
+        Math.round(((updatedGoodData.goodArea * color.qty) / divider) * 10) / 10
       return {
         ...color,
         divider,

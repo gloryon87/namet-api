@@ -2,8 +2,8 @@ import Order from './schema.js'
 
 
 class OrdersDataAccess {
-  async getAllOrders () {
-    return await Order.find()
+  async getAllOrders() {
+    return Order.find()
   }
 
   async getOrder (id) {
