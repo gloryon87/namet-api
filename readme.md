@@ -135,11 +135,10 @@ body:
 "qty": 10,
 "season": "осінь",
 "material": "спанбонд",
-"color": {
-"baige10": 2,
-"olive": 2,
-"brown": 1
-}
+"color": [{
+name: "baige10", qty: 2},
+{name: "olive", qty: 2},
+{name: "brown", qty: 1}]
 }
 
 <!-- PUT: Оновити існуючий товар -->

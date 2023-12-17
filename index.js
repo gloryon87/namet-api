@@ -377,6 +377,7 @@ app.get('/api/goods', async (req, res) => {
 app.post('/api/goods', async (req, res) => {
   try {
     const newGood = req.body
+    newGood.goodArea = newGood.a * newGood.b * newGood.qty
     const addedGood = await goodsData.addNewGood(newGood)
     res.json(addedGood)
   } catch (error) {
@@ -390,6 +391,7 @@ app.put('/api/goods/:id', async (req, res) => {
   try {
     const goodId = req.params.id
     const updatedData = req.body
+    updatedData.goodArea = updatedData.a * updatedData.b * updatedData.qty
     const updatedGood = await goodsData.updateGood(goodId, updatedData)
     res.json(updatedGood)
   } catch (error) {
