@@ -9,6 +9,7 @@ const ordersSchema = new mongoose.Schema(
         a: Number,
         b: Number,
         qty: Number,
+        delivered: Number,
         season: String,
         material: String,
         color: [
