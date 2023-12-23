@@ -65,10 +65,6 @@ app.get('/api/orders', async (req, res) => {
     for (const key in searchParams) {
       searchParams[key] = decodeURIComponent(searchParams[key])
 
-      // Конвертація числових значень
-      if (!isNaN(searchParams[key])) {
-        searchParams[key] = +searchParams[key]
-      }
     }
 
     let resultOrders
@@ -93,6 +89,7 @@ app.get('/api/orders', async (req, res) => {
       // Check for search parameter
       if (searchParams.search) {
         const escapedSearch = escapeStringRegexp(searchParams.search)
+
         // Search among 'info', 'contacts', 'goods.season', 'goods.material', and 'goods.production' fields
         query.$or = [
           { info: { $regex: escapedSearch, $options: 'i' } },
@@ -372,11 +369,6 @@ app.get('/api/goods', async (req, res) => {
     // Decode URL-encoded components
     for (const key in searchParams) {
       searchParams[key] = decodeURIComponent(searchParams[key])
-
-      // Конвертація числових значень
-      if (!isNaN(searchParams[key])) {
-        searchParams[key] = +searchParams[key]
-      }
     }
 
     let resultGoods
