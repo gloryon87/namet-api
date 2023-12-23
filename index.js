@@ -5,6 +5,8 @@ import 'dotenv/config'
 import OrdersDataAccess from './orders/DataAccess.js'
 import MaterialsDataAccess from './materials/DataAccess.js'
 import GoodsDataAccess from './goods/DataAccess.js'
+import escapeStringRegexp from 'escape-string-regexp'
+
 
 // server
 
@@ -90,13 +92,14 @@ app.get('/api/orders', async (req, res) => {
 
       // Check for search parameter
       if (searchParams.search) {
+        const escapedSearch = escapeStringRegexp(searchParams.search)
         // Search among 'info', 'contacts', 'goods.season', 'goods.material', and 'goods.production' fields
         query.$or = [
-          { info: { $regex: searchParams.search, $options: 'i' } },
-          { contacts: { $regex: searchParams.search, $options: 'i' } },
-          { 'goods.season': { $regex: searchParams.search, $options: 'i' } },
-          { 'goods.material': { $regex: searchParams.search, $options: 'i' } },
-          { 'goods.production': { $regex: searchParams.search, $options: 'i' } }
+          { info: { $regex: escapedSearch, $options: 'i' } },
+          { contacts: { $regex: escapedSearch, $options: 'i' } },
+          { 'goods.season': { $regex: escapedSearch, $options: 'i' } },
+          { 'goods.material': { $regex: escapedSearch, $options: 'i' } },
+          { 'goods.production': { $regex: escapedSearch, $options: 'i' } }
         ]
       }
 
@@ -105,7 +108,6 @@ app.get('/api/orders', async (req, res) => {
     }
 
     // Check for all parameter
-    let allResultOrders
     if (searchParams.all) {
       resultOrders = (await ordersData.getAllOrders()).toReversed()
     }
@@ -362,23 +364,85 @@ app.get('/api/materials/search', async (req, res) => {
 
 const goodsData = new GoodsDataAccess()
 
-// GET: Отримати всі товари
+// GET: Отримати всі товари або пошук за товарами
 app.get('/api/goods', async (req, res) => {
   try {
-    const allGoods = await goodsData.getAllGoods()
-    res.json(allGoods)
+    const searchParams = req.query
+
+    // Decode URL-encoded components
+    for (const key in searchParams) {
+      searchParams[key] = decodeURIComponent(searchParams[key])
+
+      // Конвертація числових значень
+      if (!isNaN(searchParams[key])) {
+        searchParams[key] = +searchParams[key]
+      }
+    }
+
+    let resultGoods
+
+    if (Object.keys(searchParams).length === 0) {
+      // If there are no search parameters, get all goods
+      resultGoods = await goodsData.getAllGoods()
+    } else {
+      // If there are search parameters, construct a query object
+      const query = {}
+
+      // Check for exact numeric search parameter for 'a'
+      if (!isNaN(searchParams.a)) {
+        query.a = +searchParams.a
+      }
+
+      // Check for exact numeric search parameter for 'b'
+      if (!isNaN(searchParams.b)) {
+        query.b = +searchParams.b
+      }
+
+      // Check for season parameter
+      if (searchParams.season) {
+        query.season = searchParams.season
+      }
+
+      // Check for search parameter
+      if (searchParams.search) {
+        const escapedSearch = escapeStringRegexp(searchParams.search)
+        // Search among 'material', 'season', 'color.name' fields
+        query.$or = [
+          { material: { $regex: escapedSearch, $options: 'i' } },
+          { season: { $regex: escapedSearch, $options: 'i' } },
+          { 'color.name': { $regex: escapedSearch, $options: 'i' } }
+        ]
+      }
+
+      resultGoods = await goodsData.findGood(query)
+    }
+
+    const filteredResultGoods = resultGoods.filter(item => item.qty > 0)
+    // Sorting the resultGoods array by 'a' and then by 'b'
+    filteredResultGoods.sort((a, b) => {
+      if (a.a !== b.a) {
+        return a.a - b.a
+      } else {
+        return a.b - b.b
+      }
+    })
+
+    res.json(filteredResultGoods)
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
 
+
+
 // POST: Додати новий товар
 app.post('/api/goods', async (req, res) => {
   try {
     const newGood = req.body
-    newGood.goodArea = newGood.a * newGood.b * newGood.qty
-    const addedGood = await goodsData.addNewGood(newGood)
+    const updatedNewGood = {...newGood, a: +newGood.a, b: +newGood.b, qty: +newGood.qty, _id: new mongoose.Types.ObjectId()}
+    updatedNewGood.goodArea = updatedNewGood.a * updatedNewGood.b * updatedNewGood.qty
+    const addedGood = await goodsData.addNewGood(updatedNewGood)
     res.json(addedGood)
   } catch (error) {
     console.error(error)

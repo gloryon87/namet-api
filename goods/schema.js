@@ -11,8 +11,6 @@ const goodsSchema = new mongoose.Schema({
           {
             name: String,
             qty: Number,
-            divider: Number,
-            colorArea: Number
           }
         ],
         goodArea: Number
