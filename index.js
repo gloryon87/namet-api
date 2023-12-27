@@ -175,6 +175,7 @@ app.put('/api/orders/:id', async (req, res) => {
     const orderId = req.params.id
     const updatedData = req.body // Отримайте дані для оновлення з запиту
     const updatedOrder = await ordersData.updateOrder(orderId, updatedData)
+
     res.json(updatedOrder)
   } catch (error) {
     console.error(error)
@@ -187,7 +188,6 @@ app.put('/api/orders/:id/remove-good/:goodId', async (req, res) => {
   try {
     const orderId = req.params.id
     const goodIdToRemove = req.params.goodId
-
     const updatedOrder = await ordersData.removeGoodFromOrder(
       orderId,
       goodIdToRemove
