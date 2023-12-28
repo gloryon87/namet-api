@@ -7,7 +7,7 @@ const goodsSchema = new mongoose.Schema({
         qty: Number,
         season: String,
         material: String,
-        deliveries: [{date: String, orderId: String, qty: Number}],
+        deliveries: [{date: String, orderId: String, qty: Number, orderContacts: String }],
         color: [
           {
             name: String,

@@ -402,6 +402,7 @@ app.get('/api/goods', async (req, res) => {
           { season: { $regex: escapedSearch, $options: 'i' } },
           { 'deliveries.date': { $regex: escapedSearch, $options: 'i' } },
           { 'deliveries.orderId': { $regex: escapedSearch, $options: 'i' } },
+          { 'deliveries.orderContacts': { $regex: escapedSearch, $options: 'i' } },
           { 'color.name': { $regex: escapedSearch, $options: 'i' } }
         ]
       }
