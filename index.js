@@ -7,7 +7,6 @@ import MaterialsDataAccess from './materials/DataAccess.js'
 import GoodsDataAccess from './goods/DataAccess.js'
 import escapeStringRegexp from 'escape-string-regexp'
 
-
 // server
 
 const app = express()
@@ -64,7 +63,6 @@ app.get('/api/orders', async (req, res) => {
     // Decode URL-encoded components
     for (const key in searchParams) {
       searchParams[key] = decodeURIComponent(searchParams[key])
-
     }
 
     let resultOrders
@@ -108,9 +106,8 @@ app.get('/api/orders', async (req, res) => {
     if (searchParams.all) {
       resultOrders = (await ordersData.getAllOrders()).toReversed()
     }
-    
-    res.json(resultOrders)
 
+    res.json(resultOrders)
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Помилка сервера' })
@@ -376,6 +373,7 @@ app.get('/api/goods', async (req, res) => {
     if (Object.keys(searchParams).length === 0) {
       // If there are no search parameters, get all goods
       resultGoods = await goodsData.getAllGoods()
+      resultGoods = resultGoods.filter(item => item.qty > 0)
     } else {
       // If there are search parameters, construct a query object
       const query = {}
@@ -402,6 +400,8 @@ app.get('/api/goods', async (req, res) => {
         query.$or = [
           { material: { $regex: escapedSearch, $options: 'i' } },
           { season: { $regex: escapedSearch, $options: 'i' } },
+          { 'deliveries.date': { $regex: escapedSearch, $options: 'i' } },
+          { 'deliveries.orderId': { $regex: escapedSearch, $options: 'i' } },
           { 'color.name': { $regex: escapedSearch, $options: 'i' } }
         ]
       }
@@ -409,9 +409,8 @@ app.get('/api/goods', async (req, res) => {
       resultGoods = await goodsData.findGood(query)
     }
 
-    const filteredResultGoods = resultGoods.filter(item => item.qty > 0)
     // Sorting the resultGoods array by 'a' and then by 'b'
-    filteredResultGoods.sort((a, b) => {
+    resultGoods.sort((a, b) => {
       if (a.a !== b.a) {
         return a.a - b.a
       } else {
@@ -419,21 +418,26 @@ app.get('/api/goods', async (req, res) => {
       }
     })
 
-    res.json(filteredResultGoods)
+    res.json(resultGoods)
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
 
-
-
 // POST: Додати новий товар
 app.post('/api/goods', async (req, res) => {
   try {
     const newGood = req.body
-    const updatedNewGood = {...newGood, a: +newGood.a, b: +newGood.b, qty: +newGood.qty, _id: new mongoose.Types.ObjectId()}
-    updatedNewGood.goodArea = updatedNewGood.a * updatedNewGood.b * updatedNewGood.qty
+    const updatedNewGood = {
+      ...newGood,
+      a: +newGood.a,
+      b: +newGood.b,
+      qty: +newGood.qty,
+      _id: new mongoose.Types.ObjectId()
+    }
+    updatedNewGood.goodArea =
+      updatedNewGood.a * updatedNewGood.b * updatedNewGood.qty
     const addedGood = await goodsData.addNewGood(updatedNewGood)
     res.json(addedGood)
   } catch (error) {
