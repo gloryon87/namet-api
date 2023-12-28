@@ -135,7 +135,7 @@ app.post('/api/orders', async (req, res) => {
       const colorWithCalculation = goodsItem.color.map(color => {
         const divider = colorQtySum
         const colorArea =
-          Math.round(((goodArea * color.qty) / divider) * 10) / 10
+          Math.ceil(((goodArea * color.qty) / divider))
 
         return {
           ...color,
@@ -215,7 +215,7 @@ app.put('/api/orders/:id/add-good', async (req, res) => {
     const colorWithCalculation = newGoodData.color.map(color => {
       const divider = colorQtySum
       const colorArea =
-        Math.round(((newGoodData.goodArea * color.qty) / divider) * 10) / 10
+        Math.ceil(((newGoodData.goodArea * color.qty) / divider))
 
       return {
         ...color,
@@ -252,7 +252,7 @@ app.put('/api/orders/:orderId/goods/:goodId', async (req, res) => {
     const colorWithCalculation = updatedGoodData.color?.map(color => {
       const divider = colorQtySum
       const colorArea =
-        Math.round(((updatedGoodData.goodArea * color.qty) / divider) * 10) / 10
+        Math.ceil(((updatedGoodData.goodArea * color.qty) / divider))
       return {
         ...color,
         divider,
