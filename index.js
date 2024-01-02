@@ -5,6 +5,7 @@ import 'dotenv/config'
 import OrdersDataAccess from './orders/DataAccess.js'
 import MaterialsDataAccess from './materials/DataAccess.js'
 import GoodsDataAccess from './goods/DataAccess.js'
+import ProductionDataAccess from './production/DataAccess.js'
 import escapeStringRegexp from 'escape-string-regexp'
 
 // server
@@ -484,3 +485,77 @@ app.get('/api/goods/search', async (req, res) => {
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
+
+
+// Виробництво
+
+const productionData = new ProductionDataAccess()
+
+// GET: Отримати всі виробництва
+app.get('/api/production', async (req, res) => {
+  try {
+    const allProductions = await productionData.getAllProductions()
+    res.json(allProductions)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+// POST: Додати нове виробництво
+app.post('/api/production', async (req, res) => {
+  try {
+    const newProduction = req.body
+    newProduction._id = new mongoose.Types.ObjectId()
+    const addedProduction = await productionData.addNewProduction(newProduction)
+    res.json(addedProduction)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+// PUT: Оновити існуюче виробництво
+app.put('/api/production/:id', async (req, res) => {
+  try {
+    const productionId = req.params.id
+    const updatedData = req.body
+  
+    const updatedGoods = updatedData.goods.map(good => {
+      good._id = new mongoose.Types.ObjectId()
+      return good
+    })
+
+    updatedData.goods = updatedGoods || []
+
+    const updatedMaterials = updatedData.materials.map(material => {
+      material._id = new mongoose.Types.ObjectId()
+      return material
+    })
+
+    updatedData.materials = updatedMaterials || []
+
+    updatedData.materials = updatedMaterials || []
+    const updateProduction = await productionData.updateProduction(
+      productionId,
+      updatedData,
+    )
+    res.json(updateProduction)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+// DELETE: Видалити виробництво
+app.delete('/api/production/:id', async (req, res) => {
+  try {
+    const productionId = req.params.id
+    const deletionResult = await productionData.deleteProduction(productionId)
+    res.json(deletionResult)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+

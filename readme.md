@@ -156,3 +156,60 @@ body:
 <!-- GET: Пошук товарів за параметрами -->
 
 /api/goods/search?season=осінь
+
+
+<!-- Виробництво -->
+
+<!-- GET: Отримати всі виробництва -->
+
+/api/production
+
+<!-- POST: Додати нове виробництво -->
+
+/api/production
+body: 
+{
+"_id": 0
+"name": "Коротич",
+"contacts": "контакти",
+"goods": [],
+"materials": []
+}
+
+<!-- PUT: Оновити існуюче виробництво -->
+
+/api/production/:id
+body:
+{
+  goods: [
+{
+"a": 4,
+"b": 6,
+"qty": 10,
+"season": "літо",
+"material": "спанбонд",
+"state": "в роботі",
+"color": [
+{
+"name": "олива",
+"qty": 1
+}
+],
+"goodArea": 240,
+"date": "2023-10-27T18:20:58Z"
+}
+],
+  "materials": [
+{
+"color": "олива",
+"material": "спанбонд",
+"qty": 500
+}
+]
+}
+
+<!-- DELETE: Видалити виробництво -->
+
+/api/production/:id
+
+
