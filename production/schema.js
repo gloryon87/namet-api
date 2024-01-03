@@ -11,13 +11,16 @@ const productionSchema = new mongoose.Schema(
         a: Number,
         b: Number,
         qty: Number,
+        delivered: Number,
         season: String,
         material: String,
         state: String,
         color: [
           {
             name: String,
-            qty: Number
+            qty: Number,
+            divider: Number,
+            colorArea: Number
           }
         ],
         goodArea: Number,
@@ -31,7 +34,7 @@ const productionSchema = new mongoose.Schema(
         material: String,
         qty: Number
       }
-        ] 
+    ]
   },
   {
     collection: 'production'

@@ -502,6 +502,19 @@ app.get('/api/production', async (req, res) => {
   }
 })
 
+// GET: Отримати одне виробництво
+app.get('/api/production/:name', async (req, res) => {
+  try {
+    const productionName = req.params.name
+    const production = await productionData.getProduction(productionName)
+    res.json(production)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+
 // POST: Додати нове виробництво
 app.post('/api/production', async (req, res) => {
   try {

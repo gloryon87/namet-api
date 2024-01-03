@@ -5,6 +5,10 @@ class ProductionDataAccess {
     return await Production.find()
   }
 
+  async getProduction (name) {
+    return await Production.find({ name: name })
+  }
+
   async addNewProduction (body) {
     return await new Production(body).save()
   }
