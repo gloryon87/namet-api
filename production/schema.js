@@ -12,6 +12,8 @@ const productionSchema = new mongoose.Schema(
         b: Number,
         qty: Number,
         delivered: Number,
+        orderId: String,
+        orderContacts: String,
         season: String,
         material: String,
         state: String,

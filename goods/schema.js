@@ -6,6 +6,8 @@ const goodsSchema = new mongoose.Schema({
         b: Number,
         qty: Number,
         season: String,
+        orderId: String,
+        orderContacts: String,
         material: String,
         deliveries: [{date: String, orderId: String, qty: Number, orderContacts: String }],
         color: [

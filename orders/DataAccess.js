@@ -61,7 +61,6 @@ class OrdersDataAccess {
     }
 
     const goodToUpdate = order.goods.id(goodId);
-    console.log(goodId)
 
     // Перевірити, чи товар знайдено
     if (!goodToUpdate) {

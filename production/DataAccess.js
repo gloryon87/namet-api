@@ -21,6 +21,33 @@ class ProductionDataAccess {
     return await Production.updateOne({ _id: id }, body)
   }
 
+  async updateGoodInProduction(productionId, goodId, updatedGoodData) {
+  try {
+    const production = await Production.findById(productionId);
+
+    if (!production) {
+      throw new Error('Виробництво не знайдено');
+    }
+
+    const goodToUpdate = production.goods.id(goodId);
+
+    // Перевірити, чи товар знайдено
+    if (!goodToUpdate) {
+      throw new Error('Товар не знайдено в замовленні');
+    }
+
+    // Оновити властивості товару
+    goodToUpdate.set(updatedGoodData);
+
+    // Зберегти зміни
+    await production.save();
+
+    return production;
+  } catch (error) {
+    throw error;
+  }
+}
+
   async deleteProduction (id) {
     return await Production.deleteOne({ _id: id })
   }

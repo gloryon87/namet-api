@@ -135,8 +135,7 @@ app.post('/api/orders', async (req, res) => {
       // Calculate divider and colorArea for each color
       const colorWithCalculation = goodsItem.color.map(color => {
         const divider = colorQtySum
-        const colorArea =
-          Math.ceil(((goodArea * color.qty) / divider))
+        const colorArea = Math.ceil((goodArea * color.qty) / divider)
 
         return {
           ...color,
@@ -215,8 +214,7 @@ app.put('/api/orders/:id/add-good', async (req, res) => {
     // Calculate divider and colorArea for each color
     const colorWithCalculation = newGoodData.color.map(color => {
       const divider = colorQtySum
-      const colorArea =
-        Math.ceil(((newGoodData.goodArea * color.qty) / divider))
+      const colorArea = Math.ceil((newGoodData.goodArea * color.qty) / divider)
 
       return {
         ...color,
@@ -252,8 +250,9 @@ app.put('/api/orders/:orderId/goods/:goodId', async (req, res) => {
     // Calculate divider and colorArea for each color
     const colorWithCalculation = updatedGoodData.color?.map(color => {
       const divider = colorQtySum
-      const colorArea =
-        Math.ceil(((updatedGoodData.goodArea * color.qty) / divider))
+      const colorArea = Math.ceil(
+        (updatedGoodData.goodArea * color.qty) / divider
+      )
       return {
         ...color,
         divider,
@@ -403,7 +402,9 @@ app.get('/api/goods', async (req, res) => {
           { season: { $regex: escapedSearch, $options: 'i' } },
           { 'deliveries.date': { $regex: escapedSearch, $options: 'i' } },
           { 'deliveries.orderId': { $regex: escapedSearch, $options: 'i' } },
-          { 'deliveries.orderContacts': { $regex: escapedSearch, $options: 'i' } },
+          {
+            'deliveries.orderContacts': { $regex: escapedSearch, $options: 'i' }
+          },
           { 'color.name': { $regex: escapedSearch, $options: 'i' } }
         ]
       }
@@ -427,21 +428,35 @@ app.get('/api/goods', async (req, res) => {
   }
 })
 
-// POST: Додати новий товар
+// POST: Додати новий товар або оновити існуючий
 app.post('/api/goods', async (req, res) => {
   try {
-    const newGood = req.body
-    const updatedNewGood = {
-      ...newGood,
-      a: +newGood.a,
-      b: +newGood.b,
-      qty: +newGood.qty,
-      _id: new mongoose.Types.ObjectId()
+    const newGoodData = req.body
+
+    // Перевірка, чи вже існує товар з вказаними параметрами
+    const existingGood = await goodsData.findGood({
+      a: newGoodData.a,
+      b: newGoodData.b,
+      orderId: newGoodData.orderId,
+      color: newGoodData.color
+    })
+
+    if (existingGood.length > 0) {
+      // Якщо товар існує, оновити його
+      const updatedGood = existingGood[0]
+
+      updatedGood.qty += newGoodData.qty
+      updatedGood.goodArea = +updatedGood.a * +updatedGood.b * +updatedGood.qty
+
+      await goodsData.updateGood(updatedGood._id, updatedGood)
+
+      res.json(updatedGood)
+    } else {
+      // Якщо товар не існує, додати новий
+      const createdGood = await goodsData.addNewGood(newGoodData)
+
+      res.json(createdGood)
     }
-    updatedNewGood.goodArea =
-      updatedNewGood.a * updatedNewGood.b * updatedNewGood.qty
-    const addedGood = await goodsData.addNewGood(updatedNewGood)
-    res.json(addedGood)
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Помилка сервера' })
@@ -486,7 +501,6 @@ app.get('/api/goods/search', async (req, res) => {
   }
 })
 
-
 // Виробництво
 
 const productionData = new ProductionDataAccess()
@@ -514,7 +528,6 @@ app.get('/api/production/:name', async (req, res) => {
   }
 })
 
-
 // POST: Додати нове виробництво
 app.post('/api/production', async (req, res) => {
   try {
@@ -533,7 +546,7 @@ app.put('/api/production/:id', async (req, res) => {
   try {
     const productionId = req.params.id
     const updatedData = req.body
-  
+
     const updatedGoods = updatedData.goods.map(good => {
       good._id = new mongoose.Types.ObjectId()
       return good
@@ -542,18 +555,64 @@ app.put('/api/production/:id', async (req, res) => {
     updatedData.goods = updatedGoods || []
 
     const updatedMaterials = updatedData.materials.map(material => {
-      material._id = new mongoose.Types.ObjectId()
+      if (!material._id) {
+        material._id = new mongoose.Types.ObjectId()
+        material.qty = Math.floor(material.qty)
+      }
       return material
     })
 
     updatedData.materials = updatedMaterials || []
 
-    updatedData.materials = updatedMaterials || []
     const updateProduction = await productionData.updateProduction(
       productionId,
-      updatedData,
+      updatedData
     )
+
     res.json(updateProduction)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+// PUT редагувати товар на виробництві
+app.put('/api/production/:productionId/goods/:goodId', async (req, res) => {
+  try {
+    const productionId = req.params.productionId
+    const goodId = req.params.goodId
+    const updatedGoodData = req.body
+    // updatedGoodData.goodArea =
+    //   updatedGoodData.a * updatedGoodData.b * updatedGoodData.qty
+    updatedGoodData.date = new Date()
+
+    // Calculate the sum of qty in the color array
+    // const colorQtySum = updatedGoodData.color.reduce(
+    //   (sum, color) => sum + color.qty,
+    //   0
+    // )
+    // Calculate divider and colorArea for each color
+    // const colorWithCalculation = updatedGoodData.color?.map(color => {
+    //   const divider = colorQtySum
+    //   const colorArea = Math.ceil(
+    //     (updatedGoodData.goodArea * color.qty) / divider
+    //   )
+    //   return {
+    //     ...color,
+    //     divider,
+    //     colorArea
+    //   }
+    // })
+
+    // updatedGoodData.color = colorWithCalculation || []
+
+    const updatedProduction = await productionData.updateGoodInProduction(
+      productionId,
+      goodId,
+      updatedGoodData
+    )
+
+    res.json(updatedProduction)
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Помилка сервера' })
@@ -571,4 +630,3 @@ app.delete('/api/production/:id', async (req, res) => {
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
-
