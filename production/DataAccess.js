@@ -21,6 +21,21 @@ class ProductionDataAccess {
     return await Production.updateOne({ _id: id }, body)
   }
 
+    async addGoodToProduction(productionId, newGoodData) {
+    try {
+      const production = await Production.findById(productionId);
+      if (!production) {
+        throw new Error('Виробництво не знайдено');
+      }
+      production.goods.push(newGoodData);
+      await production.save();
+
+      return production;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async updateGoodInProduction(productionId, goodId, updatedGoodData) {
   try {
     const production = await Production.findById(productionId);

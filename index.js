@@ -239,28 +239,32 @@ app.put('/api/orders/:orderId/goods/:goodId', async (req, res) => {
     const orderId = req.params.orderId
     const goodId = req.params.goodId
     const updatedGoodData = req.body
-    updatedGoodData.goodArea =
-      updatedGoodData.a * updatedGoodData.b * updatedGoodData.qty
+    if (updatedGoodData.a && updatedGoodData.b && updatedGoodData.qty) {
+      updatedGoodData.goodArea =
+        updatedGoodData.a * updatedGoodData.b * updatedGoodData.qty
+    } 
 
     // Calculate the sum of qty in the color array
-    const colorQtySum = updatedGoodData.color.reduce(
-      (sum, color) => sum + color.qty,
-      0
-    )
-    // Calculate divider and colorArea for each color
-    const colorWithCalculation = updatedGoodData.color?.map(color => {
-      const divider = colorQtySum
-      const colorArea = Math.ceil(
-        (updatedGoodData.goodArea * color.qty) / divider
+    if (updatedGoodData.color) {
+      const colorQtySum = updatedGoodData.color?.reduce(
+        (sum, color) => sum + color.qty,
+        0
       )
-      return {
-        ...color,
-        divider,
-        colorArea
-      }
-    })
+      // Calculate divider and colorArea for each color
+      const colorWithCalculation = updatedGoodData.color?.map(color => {
+        const divider = colorQtySum
+        const colorArea = Math.ceil(
+          (updatedGoodData.goodArea * color.qty) / divider
+        )
+        return {
+          ...color,
+          divider,
+          colorArea
+        }
+      })
 
-    updatedGoodData.color = colorWithCalculation || []
+      updatedGoodData.color = colorWithCalculation || []
+    }
 
     const updatedOrder = await ordersData.updateGoodInOrder(
       orderId,
@@ -438,7 +442,7 @@ app.post('/api/goods', async (req, res) => {
       a: newGoodData.a,
       b: newGoodData.b,
       orderId: newGoodData.orderId,
-      color: newGoodData.color
+      colorCode: newGoodData.colorCode
     })
 
     if (existingGood.length > 0) {
@@ -453,6 +457,11 @@ app.post('/api/goods', async (req, res) => {
       res.json(updatedGood)
     } else {
       // Якщо товар не існує, додати новий
+      newGoodData.goodArea = +newGoodData.a * +newGoodData.b * +newGoodData.qty
+      newGoodData.colorCode = newGoodData.color
+        .map(color => `${color.name}:${color.qty}`)
+        .join(', ')
+
       const createdGood = await goodsData.addNewGood(newGoodData)
 
       res.json(createdGood)
@@ -547,12 +556,12 @@ app.put('/api/production/:id', async (req, res) => {
     const productionId = req.params.id
     const updatedData = req.body
 
-    const updatedGoods = updatedData.goods.map(good => {
-      good._id = new mongoose.Types.ObjectId()
-      return good
-    })
+    // const updatedGoods = updatedData.goods.map(good => {
+    //   good._id = new mongoose.Types.ObjectId()
+    //   return good
+    // })
 
-    updatedData.goods = updatedGoods || []
+    // updatedData.goods = updatedGoods || []
 
     const updatedMaterials = updatedData.materials.map(material => {
       if (!material._id) {
@@ -576,14 +585,39 @@ app.put('/api/production/:id', async (req, res) => {
   }
 })
 
+// POST: Додати товар на виробництво
+app.post('/api/production/:id/goods', async (req, res) => {
+  try {
+    const productionId = req.params.id
+    const newGoodData = req.body
+    newGoodData._id = new mongoose.Types.ObjectId()
+    newGoodData.date = new Date()
+    newGoodData.delivered = 0
+    if (newGoodData.a && newGoodData.b && newGoodData.qty) {
+      newGoodData.goodArea = newGoodData.a * newGoodData.b * newGoodData.qty
+    }
+
+    const updateProduction = await productionData.addGoodToProduction(
+      productionId,
+      newGoodData
+    )
+
+    res.json(updateProduction)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
 // PUT редагувати товар на виробництві
 app.put('/api/production/:productionId/goods/:goodId', async (req, res) => {
   try {
     const productionId = req.params.productionId
     const goodId = req.params.goodId
     const updatedGoodData = req.body
-    // updatedGoodData.goodArea =
-    //   updatedGoodData.a * updatedGoodData.b * updatedGoodData.qty
+    if (updatedGoodData.a && updatedGoodData.b && updatedGoodData.qty) {
+      updatedGoodData.goodArea =
+  updatedGoodData.a * updatedGoodData.b * updatedGoodData.qty }
     updatedGoodData.date = new Date()
 
     // Calculate the sum of qty in the color array
