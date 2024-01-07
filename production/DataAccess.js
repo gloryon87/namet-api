@@ -61,7 +61,22 @@ class ProductionDataAccess {
   } catch (error) {
     throw error;
   }
-}
+  }
+  
+  async removeGoodFromProduction(productionId, goodIdToRemove) {
+    try {
+      const production = await Production.findById(productionId);
+      if (!production) {
+        throw new Error('Виробництво не знайдено');
+      }
+      production.goods.pull({ _id: goodIdToRemove });
+      await production.save();
+
+      return production;
+    } catch (error) {
+      throw error;
+    }
+  }
 
   async deleteProduction (id) {
     return await Production.deleteOne({ _id: id })

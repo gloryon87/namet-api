@@ -653,6 +653,24 @@ app.put('/api/production/:productionId/goods/:goodId', async (req, res) => {
   }
 })
 
+// PUT видалити товар з виробництва
+app.put('/api/production/:id/remove-good/:goodId', async (req, res) => {
+  try {
+    const productionId = req.params.id
+    const goodIdToRemove = req.params.goodId
+    const updatedProduction = await productionData.removeGoodFromProduction(
+      productionId,
+      goodIdToRemove
+    )
+
+    res.json(updatedProduction)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+
 // DELETE: Видалити виробництво
 app.delete('/api/production/:id', async (req, res) => {
   try {
