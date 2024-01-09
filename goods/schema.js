@@ -1,7 +1,10 @@
 import mongoose from 'mongoose'
 
 const goodsSchema = new mongoose.Schema({
-        _id: mongoose.Schema.Types.ObjectId,
+        _id: {
+          type: mongoose.Schema.Types.ObjectId,
+          default: () => new mongoose.Types.ObjectId()
+        },
         a: Number,
         b: Number,
         qty: Number,

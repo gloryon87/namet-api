@@ -7,7 +7,10 @@ const productionSchema = new mongoose.Schema(
     contacts: String,
     goods: [
       {
-        _id: mongoose.Schema.Types.ObjectId,
+        _id: {
+          type: mongoose.Schema.Types.ObjectId,
+          default: () => new mongoose.Types.ObjectId()
+        },
         a: Number,
         b: Number,
         qty: Number,

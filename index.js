@@ -457,6 +457,7 @@ app.post('/api/goods', async (req, res) => {
       res.json(updatedGood)
     } else {
       // Якщо товар не існує, додати новий
+      newGoodData._id = new mongoose.Types.ObjectId()
       newGoodData.goodArea = +newGoodData.a * +newGoodData.b * +newGoodData.qty
       newGoodData.colorCode = newGoodData.color
         .map(color => `${color.name}:${color.qty}`)
@@ -585,12 +586,12 @@ app.put('/api/production/:id', async (req, res) => {
   }
 })
 
-// POST: Додати товар на виробництво
-app.post('/api/production/:id/goods', async (req, res) => {
+// PUT: Додати товар на виробництво
+app.put('/api/production/:id/goods', async (req, res) => {
   try {
     const productionId = req.params.id
     const newGoodData = req.body
-    newGoodData._id = new mongoose.Types.ObjectId()
+    // newGoodData._id = new mongoose.Types.ObjectId()
     newGoodData.date = new Date()
     newGoodData.delivered = 0
     if (newGoodData.a && newGoodData.b && newGoodData.qty) {

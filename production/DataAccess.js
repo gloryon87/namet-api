@@ -1,4 +1,4 @@
-import Production from "./schema.js"
+import Production from './schema.js'
 
 class ProductionDataAccess {
   async getAllProductions () {
@@ -21,67 +21,70 @@ class ProductionDataAccess {
     return await Production.updateOne({ _id: id }, body)
   }
 
-    async addGoodToProduction(productionId, newGoodData) {
+  async addGoodToProduction (productionId, newGoodData) {
     try {
-      const production = await Production.findById(productionId);
+      const production = await Production.findById(productionId)
       if (!production) {
-        throw new Error('Виробництво не знайдено');
+        throw new Error('Виробництво не знайдено')
       }
-      production.goods.push(newGoodData);
-      await production.save();
 
-      return production;
+      // Видаляємо _id з newGoodData, щоб Mongoose створив його автоматично
+      delete newGoodData._id
+
+      production.goods.push(newGoodData)
+      await production.save()
+
+      return production
     } catch (error) {
-      throw error;
+      throw error
     }
   }
 
-  async updateGoodInProduction(productionId, goodId, updatedGoodData) {
-  try {
-    const production = await Production.findById(productionId);
-
-    if (!production) {
-      throw new Error('Виробництво не знайдено');
-    }
-
-    const goodToUpdate = production.goods.id(goodId);
-
-    // Перевірити, чи товар знайдено
-    if (!goodToUpdate) {
-      throw new Error('Товар не знайдено в замовленні');
-    }
-
-    // Оновити властивості товару
-    goodToUpdate.set(updatedGoodData);
-
-    // Зберегти зміни
-    await production.save();
-
-    return production;
-  } catch (error) {
-    throw error;
-  }
-  }
-  
-  async removeGoodFromProduction(productionId, goodIdToRemove) {
+  async updateGoodInProduction (productionId, goodId, updatedGoodData) {
     try {
-      const production = await Production.findById(productionId);
-      if (!production) {
-        throw new Error('Виробництво не знайдено');
-      }
-      production.goods.pull({ _id: goodIdToRemove });
-      await production.save();
+      const production = await Production.findById(productionId)
 
-      return production;
+      if (!production) {
+        throw new Error('Виробництво не знайдено')
+      }
+
+      const goodToUpdate = production.goods.id(goodId)
+
+      // Перевірити, чи товар знайдено
+      if (!goodToUpdate) {
+        throw new Error('Товар не знайдено на виробництві')
+      }
+
+      // Оновити властивості товару
+      goodToUpdate.set(updatedGoodData)
+
+      // Зберегти зміни
+      await production.save()
+
+      return production
     } catch (error) {
-      throw error;
+      throw error
+    }
+  }
+
+  async removeGoodFromProduction (productionId, goodIdToRemove) {
+    try {
+      const production = await Production.findById(productionId)
+      if (!production) {
+        throw new Error('Виробництво не знайдено')
+      }
+      production.goods.pull({ _id: goodIdToRemove })
+      await production.save()
+
+      return production
+    } catch (error) {
+      throw error
     }
   }
 
   async deleteProduction (id) {
     return await Production.deleteOne({ _id: id })
   }
-
 }
 
 export default ProductionDataAccess
