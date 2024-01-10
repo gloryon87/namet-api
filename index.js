@@ -306,17 +306,26 @@ app.get('/api/materials', async (req, res) => {
   }
 })
 
-// POST: Додати новий матеріал
+// POST: Додати нові матеріали
 app.post('/api/materials', async (req, res) => {
   try {
-    const newMaterial = req.body
-    const addedMaterial = await materialsData.addNewMaterial(newMaterial)
-    res.json(addedMaterial)
+    const newMaterials = req.body
+    console.log(newMaterials)
+    
+    const addedMaterials = []
+
+    for (const material of newMaterials) {
+      const addedMaterial = await materialsData.addNewMaterial(material)
+      addedMaterials.push(addedMaterial)
+    }
+
+    res.json(addedMaterials)
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
+
 
 // PUT: Оновити існуючий матеріал
 app.put('/api/materials/:id', async (req, res) => {
@@ -333,6 +342,25 @@ app.put('/api/materials/:id', async (req, res) => {
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
+
+// PUT: Оновити існуючі матеріали
+app.put('/api/materials', async (req, res) => {
+  try {
+    const updatedMaterials = req.body
+    const materialIds = updatedMaterials.map(material => material._id)
+
+    const result = await materialsData.updateMaterials(
+      materialIds,
+      updatedMaterials
+    )
+
+    res.json(result)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
 
 // DELETE: Видалити матеріал
 app.delete('/api/materials/:id', async (req, res) => {
@@ -557,13 +585,6 @@ app.put('/api/production/:id', async (req, res) => {
     const productionId = req.params.id
     const updatedData = req.body
 
-    // const updatedGoods = updatedData.goods.map(good => {
-    //   good._id = new mongoose.Types.ObjectId()
-    //   return good
-    // })
-
-    // updatedData.goods = updatedGoods || []
-
     const updatedMaterials = updatedData.materials.map(material => {
       if (!material._id) {
         material._id = new mongoose.Types.ObjectId()
@@ -580,6 +601,52 @@ app.put('/api/production/:id', async (req, res) => {
     )
 
     res.json(updateProduction)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+// PUT: Додати матеріал на виробництво
+app.put('/api/production/:id/materials', async (req, res) => {
+  try {
+    const productionId = req.params.id
+    const updatedData = req.body
+
+    const production = await productionData.findProduction({ _id: productionId })
+    console.log(production[0].materials)
+
+    if (!production) {
+      throw new Error('Виробництво не знайдено')
+    }
+
+    // Проходимо по оновлених матеріалах
+    updatedData.materials.forEach(updatedMaterial => {
+      // Шукаємо матеріал за кольором та матеріалом
+      const existingMaterial = production[0].materials.find(
+        material =>
+          material.color === updatedMaterial.color &&
+          material.material === updatedMaterial.material
+      )
+
+      if (existingMaterial) {
+        // Якщо матеріал існує, оновлюємо його qty
+        existingMaterial.qty += updatedMaterial.qty
+      } else {
+        // Якщо матеріал не існує, додаємо його до масиву матеріалів виробництва
+        production[0].materials.push({
+          _id: new mongoose.Types.ObjectId(),
+          color: updatedMaterial.color,
+          material: updatedMaterial.material,
+          qty: Math.floor(updatedMaterial.qty)
+        })
+      }
+    })
+
+    // Зберігаємо оновлене виробництво
+    await production[0].save()
+
+    res.json(production[0])
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Помилка сервера' })
@@ -683,3 +750,6 @@ app.delete('/api/production/:id', async (req, res) => {
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
+
+
+
