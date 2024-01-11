@@ -310,7 +310,6 @@ app.get('/api/materials', async (req, res) => {
 app.post('/api/materials', async (req, res) => {
   try {
     const newMaterials = req.body
-    console.log(newMaterials)
     
     const addedMaterials = []
 
@@ -614,7 +613,6 @@ app.put('/api/production/:id/materials', async (req, res) => {
     const updatedData = req.body
 
     const production = await productionData.findProduction({ _id: productionId })
-    console.log(production[0].materials)
 
     if (!production) {
       throw new Error('Виробництво не знайдено')
