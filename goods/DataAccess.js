@@ -9,7 +9,7 @@ class GoodsDataAccess {
     return await new Good(body).save()
   }
 
-  async findGood (body) {
+  async findGood(body) {
     return await Good.find(body)
   }
 

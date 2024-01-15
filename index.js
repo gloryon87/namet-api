@@ -242,7 +242,7 @@ app.put('/api/orders/:orderId/goods/:goodId', async (req, res) => {
     if (updatedGoodData.a && updatedGoodData.b && updatedGoodData.qty) {
       updatedGoodData.goodArea =
         updatedGoodData.a * updatedGoodData.b * updatedGoodData.qty
-    } 
+    }
 
     // Calculate the sum of qty in the color array
     if (updatedGoodData.color) {
@@ -310,7 +310,7 @@ app.get('/api/materials', async (req, res) => {
 app.post('/api/materials', async (req, res) => {
   try {
     const newMaterials = req.body
-    
+
     const addedMaterials = []
 
     for (const material of newMaterials) {
@@ -324,7 +324,6 @@ app.post('/api/materials', async (req, res) => {
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
-
 
 // PUT: Оновити існуючий матеріал
 app.put('/api/materials/:id', async (req, res) => {
@@ -359,7 +358,6 @@ app.put('/api/materials', async (req, res) => {
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
-
 
 // DELETE: Видалити матеріал
 app.delete('/api/materials/:id', async (req, res) => {
@@ -468,8 +466,8 @@ app.post('/api/goods', async (req, res) => {
     const existingGood = await goodsData.findGood({
       a: newGoodData.a,
       b: newGoodData.b,
-      orderId: newGoodData.orderId,
-      colorCode: newGoodData.colorCode
+      material: newGoodData.material,
+      colorCode: newGoodData.color.map(color => `${color.name}:${color.qty}`).join(', ')
     })
 
     if (existingGood.length > 0) {
@@ -587,7 +585,7 @@ app.put('/api/production/:id', async (req, res) => {
     const updatedMaterials = updatedData.materials.map(material => {
       if (!material._id) {
         material._id = new mongoose.Types.ObjectId()
-        material.qty = Math.floor(material.qty)
+        material.qty = material.qty < 0 ? 0 : Math.floor(material.qty)
       }
       return material
     })
@@ -612,7 +610,9 @@ app.put('/api/production/:id/materials', async (req, res) => {
     const productionId = req.params.id
     const updatedData = req.body
 
-    const production = await productionData.findProduction({ _id: productionId })
+    const production = await productionData.findProduction({
+      _id: productionId
+    })
 
     if (!production) {
       throw new Error('Виробництво не знайдено')
@@ -651,14 +651,35 @@ app.put('/api/production/:id/materials', async (req, res) => {
   }
 })
 
-// PUT: Додати товар на виробництво
-app.put('/api/production/:id/goods', async (req, res) => {
+// POST: Додати товар на виробництво
+app.post('/api/production/:id/goods', async (req, res) => {
   try {
     const productionId = req.params.id
     const newGoodData = req.body
     // newGoodData._id = new mongoose.Types.ObjectId()
     newGoodData.date = new Date()
     newGoodData.delivered = 0
+
+    // Calculate the sum of qty in the color array
+    const colorQtySum = newGoodData.color.reduce(
+      (sum, color) => sum + color.qty,
+      0
+    )
+
+    // Calculate divider and colorArea for each color
+    const colorWithCalculation = newGoodData.color.map(color => {
+      const divider = colorQtySum
+      const colorArea = Math.ceil((newGoodData.goodArea * color.qty) / divider)
+
+      return {
+        ...color,
+        divider,
+        colorArea
+      }
+    })
+
+    newGoodData.color = colorWithCalculation
+
     if (newGoodData.a && newGoodData.b && newGoodData.qty) {
       newGoodData.goodArea = newGoodData.a * newGoodData.b * newGoodData.qty
     }
@@ -683,28 +704,29 @@ app.put('/api/production/:productionId/goods/:goodId', async (req, res) => {
     const updatedGoodData = req.body
     if (updatedGoodData.a && updatedGoodData.b && updatedGoodData.qty) {
       updatedGoodData.goodArea =
-  updatedGoodData.a * updatedGoodData.b * updatedGoodData.qty }
+        updatedGoodData.a * updatedGoodData.b * updatedGoodData.qty
+    }
     updatedGoodData.date = new Date()
 
     // Calculate the sum of qty in the color array
-    // const colorQtySum = updatedGoodData.color.reduce(
-    //   (sum, color) => sum + color.qty,
-    //   0
-    // )
+    const colorQtySum = updatedGoodData.color.reduce(
+      (sum, color) => sum + color.qty,
+      0
+    )
     // Calculate divider and colorArea for each color
-    // const colorWithCalculation = updatedGoodData.color?.map(color => {
-    //   const divider = colorQtySum
-    //   const colorArea = Math.ceil(
-    //     (updatedGoodData.goodArea * color.qty) / divider
-    //   )
-    //   return {
-    //     ...color,
-    //     divider,
-    //     colorArea
-    //   }
-    // })
+    const colorWithCalculation = updatedGoodData.color?.map(color => {
+      const divider = colorQtySum
+      const colorArea = Math.ceil(
+        (updatedGoodData.goodArea * color.qty) / divider
+      )
+      return {
+        ...color,
+        divider,
+        colorArea
+      }
+    })
 
-    // updatedGoodData.color = colorWithCalculation || []
+    updatedGoodData.color = colorWithCalculation || []
 
     const updatedProduction = await productionData.updateGoodInProduction(
       productionId,
@@ -736,7 +758,6 @@ app.put('/api/production/:id/remove-good/:goodId', async (req, res) => {
   }
 })
 
-
 // DELETE: Видалити виробництво
 app.delete('/api/production/:id', async (req, res) => {
   try {
@@ -748,6 +769,3 @@ app.delete('/api/production/:id', async (req, res) => {
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
-
-
-
