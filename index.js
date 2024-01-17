@@ -656,19 +656,19 @@ app.post('/api/production/:id/goods', async (req, res) => {
   try {
     const productionId = req.params.id
     const newGoodData = req.body
-    // newGoodData._id = new mongoose.Types.ObjectId()
+    newGoodData._id = new mongoose.Types.ObjectId()
     newGoodData.date = new Date()
     newGoodData.delivered = 0
+    newGoodData.goodArea = newGoodData.a * newGoodData.b * newGoodData.qty
 
     // Calculate the sum of qty in the color array
-    const colorQtySum = newGoodData.color.reduce(
+    const divider = newGoodData.color.reduce(
       (sum, color) => sum + color.qty,
       0
     )
 
     // Calculate divider and colorArea for each color
     const colorWithCalculation = newGoodData.color.map(color => {
-      const divider = colorQtySum
       const colorArea = Math.ceil((newGoodData.goodArea * color.qty) / divider)
 
       return {
