@@ -127,13 +127,13 @@ app.post('/api/orders', async (req, res) => {
       const goodArea = goodsItem.a * goodsItem.b * goodsItem.qty
 
       // Calculate the sum of qty in the color array
-      const colorQtySum = goodsItem.color.reduce(
+      const colorQtySum = goodsItem.color?.reduce(
         (sum, color) => sum + color.qty,
         0
-      )
+      ) || 1
 
       // Calculate divider and colorArea for each color
-      const colorWithCalculation = goodsItem.color.map(color => {
+      const colorWithCalculation = goodsItem.color?.map(color => {
         const divider = colorQtySum
         const colorArea = Math.ceil((goodArea * color.qty) / divider)
 
