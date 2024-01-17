@@ -123,7 +123,7 @@ app.post('/api/orders', async (req, res) => {
     const newOrderData = req.body
 
     // Calculate and add new fields to each goods item
-    const goodsWithId = newOrderData.goods.map(goodsItem => {
+    const goodsWithId = newOrderData.goods?.map(goodsItem => {
       const goodArea = goodsItem.a * goodsItem.b * goodsItem.qty
 
       // Calculate the sum of qty in the color array
@@ -206,13 +206,13 @@ app.put('/api/orders/:id/add-good', async (req, res) => {
     newGoodData.goodArea = newGoodData.a * newGoodData.b * newGoodData.qty
 
     // Calculate the sum of qty in the color array
-    const colorQtySum = newGoodData.color.reduce(
+    const colorQtySum = newGoodData.color?.reduce(
       (sum, color) => sum + color.qty,
       0
     )
 
     // Calculate divider and colorArea for each color
-    const colorWithCalculation = newGoodData.color.map(color => {
+    const colorWithCalculation = newGoodData.color?.map(color => {
       const divider = colorQtySum
       const colorArea = Math.ceil((newGoodData.goodArea * color.qty) / divider)
 
@@ -222,7 +222,7 @@ app.put('/api/orders/:id/add-good', async (req, res) => {
         colorArea
       }
     })
-    newGoodData.color = colorWithCalculation
+    newGoodData.color = colorWithCalculation || []
 
     const updatedOrder = await ordersData.addGoodToOrder(orderId, newGoodData)
 
@@ -246,12 +246,12 @@ app.put('/api/orders/:orderId/goods/:goodId', async (req, res) => {
 
     // Calculate the sum of qty in the color array
     if (updatedGoodData.color) {
-      const colorQtySum = updatedGoodData.color?.reduce(
+      const colorQtySum = updatedGoodData.color.reduce(
         (sum, color) => sum + color.qty,
         0
       )
       // Calculate divider and colorArea for each color
-      const colorWithCalculation = updatedGoodData.color?.map(color => {
+      const colorWithCalculation = updatedGoodData.color.map(color => {
         const divider = colorQtySum
         const colorArea = Math.ceil(
           (updatedGoodData.goodArea * color.qty) / divider
@@ -467,7 +467,7 @@ app.post('/api/goods', async (req, res) => {
       a: newGoodData.a,
       b: newGoodData.b,
       material: newGoodData.material,
-      colorCode: newGoodData.color.map(color => `${color.name}:${color.qty}`).join(', ')
+      colorCode: newGoodData.color?.map(color => `${color.name}:${color.qty}`).join(', ')
     })
 
     if (existingGood.length > 0) {
@@ -484,8 +484,7 @@ app.post('/api/goods', async (req, res) => {
       // Якщо товар не існує, додати новий
       newGoodData._id = new mongoose.Types.ObjectId()
       newGoodData.goodArea = +newGoodData.a * +newGoodData.b * +newGoodData.qty
-      newGoodData.colorCode = newGoodData.color
-        .map(color => `${color.name}:${color.qty}`)
+      newGoodData.colorCode = newGoodData.color?.map(color => `${color.name}:${color.qty}`)
         .join(', ')
 
       const createdGood = await goodsData.addNewGood(newGoodData)
@@ -582,7 +581,7 @@ app.put('/api/production/:id', async (req, res) => {
     const productionId = req.params.id
     const updatedData = req.body
 
-    const updatedMaterials = updatedData.materials.map(material => {
+    const updatedMaterials = updatedData.materials?.map(material => {
       if (!material._id) {
         material._id = new mongoose.Types.ObjectId()
         material.qty = material.qty < 0 ? 0 : Math.floor(material.qty)
@@ -662,13 +661,13 @@ app.post('/api/production/:id/goods', async (req, res) => {
     newGoodData.goodArea = newGoodData.a * newGoodData.b * newGoodData.qty
 
     // Calculate the sum of qty in the color array
-    const divider = newGoodData.color.reduce(
+    const divider = newGoodData.color?.reduce(
       (sum, color) => sum + color.qty,
       0
     )
 
     // Calculate divider and colorArea for each color
-    const colorWithCalculation = newGoodData.color.map(color => {
+    const colorWithCalculation = newGoodData.color?.map(color => {
       const colorArea = Math.ceil((newGoodData.goodArea * color.qty) / divider)
 
       return {
@@ -678,7 +677,7 @@ app.post('/api/production/:id/goods', async (req, res) => {
       }
     })
 
-    newGoodData.color = colorWithCalculation
+    newGoodData.color = colorWithCalculation || []
 
     if (newGoodData.a && newGoodData.b && newGoodData.qty) {
       newGoodData.goodArea = newGoodData.a * newGoodData.b * newGoodData.qty
@@ -709,7 +708,7 @@ app.put('/api/production/:productionId/goods/:goodId', async (req, res) => {
     updatedGoodData.date = new Date()
 
     // Calculate the sum of qty in the color array
-    const colorQtySum = updatedGoodData.color.reduce(
+    const colorQtySum = updatedGoodData.color?.reduce(
       (sum, color) => sum + color.qty,
       0
     )
