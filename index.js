@@ -6,7 +6,11 @@ import OrdersDataAccess from './orders/DataAccess.js'
 import MaterialsDataAccess from './materials/DataAccess.js'
 import GoodsDataAccess from './goods/DataAccess.js'
 import ProductionDataAccess from './production/DataAccess.js'
+import UsersDataAccess from './users/DataAccess.js'
 import escapeStringRegexp from 'escape-string-regexp'
+import jwt from 'jsonwebtoken'
+const { sign, verify } = jwt
+
 
 // server
 
@@ -41,11 +45,52 @@ const main = async () => {
 
 main()
 
+// Login
+const usersData = new UsersDataAccess()
+
+// POST: Логін
+app.post('/api/login', async (req, res) => {
+  try {
+    const { login, password } = req.body
+    const user = await usersData.userCheck(login, password)
+    const token = sign({ userId: user._id }, process.env.SECRET_KEY, {
+      // expiresIn: '1h'
+    })
+    res.status(200).json({ token })
+  } catch (error) {
+    console.error(error)
+    if (error.message === 'User not found') {
+      return res.status(401).json({ message: 'Помилка аутентифікації' })
+    }
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+// Перевірка токена
+
+function authenticateToken (req, res, next) {
+  const token = req.headers.authorization?.split(' ')[1]
+
+  if (!token) {
+    return res.status(401).json({ message: 'Unauthorized' })
+  }
+
+  verify(token, process.env.SECRET_KEY, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid token' })
+    }
+
+    req.user = user
+    next()
+  })
+}
+
+
 // ЗАМОВЛЕННЯ
 const ordersData = new OrdersDataAccess()
 
 // GET: Отримати одне замовлення
-app.get('/api/orders/:id', async (req, res) => {
+app.get('/api/orders/:id', authenticateToken, async (req, res) => {
   try {
     const orderId = req.params.id
     const order = await ordersData.getOrder(orderId)
@@ -57,7 +102,7 @@ app.get('/api/orders/:id', async (req, res) => {
 })
 
 // GET: Отримати всі замовлення або Пошук за параметрами
-app.get('/api/orders', async (req, res) => {
+app.get('/api/orders', authenticateToken, async (req, res) => {
   try {
     const searchParams = req.query
 
@@ -118,7 +163,7 @@ app.get('/api/orders', async (req, res) => {
 // /api/orders?contacts=0989880990 Слава&state=в роботі
 
 // POST: Додати нове замовлення
-app.post('/api/orders', async (req, res) => {
+app.post('/api/orders', authenticateToken, async (req, res) => {
   try {
     const newOrderData = req.body
 
@@ -127,10 +172,8 @@ app.post('/api/orders', async (req, res) => {
       const goodArea = goodsItem.a * goodsItem.b * goodsItem.qty
 
       // Calculate the sum of qty in the color array
-      const colorQtySum = goodsItem.color?.reduce(
-        (sum, color) => sum + color.qty,
-        0
-      ) || 1
+      const colorQtySum =
+        goodsItem.color?.reduce((sum, color) => sum + color.qty, 0) || 1
 
       // Calculate divider and colorArea for each color
       const colorWithCalculation = goodsItem.color?.map(color => {
@@ -167,7 +210,7 @@ app.post('/api/orders', async (req, res) => {
 })
 
 // PUT: Оновити існуюче замовлення
-app.put('/api/orders/:id', async (req, res) => {
+app.put('/api/orders/:id', authenticateToken, async (req, res) => {
   try {
     const orderId = req.params.id
     const updatedData = req.body // Отримайте дані для оновлення з запиту
@@ -181,7 +224,7 @@ app.put('/api/orders/:id', async (req, res) => {
 })
 
 // PUT видалити товар із замовлення
-app.put('/api/orders/:id/remove-good/:goodId', async (req, res) => {
+app.put('/api/orders/:id/remove-good/:goodId', authenticateToken, async (req, res) => {
   try {
     const orderId = req.params.id
     const goodIdToRemove = req.params.goodId
@@ -198,7 +241,7 @@ app.put('/api/orders/:id/remove-good/:goodId', async (req, res) => {
 })
 
 // PUT додати товар до замовлення
-app.put('/api/orders/:id/add-good', async (req, res) => {
+app.put('/api/orders/:id/add-good', authenticateToken, async (req, res) => {
   try {
     const orderId = req.params.id
     const newGoodData = req.body
@@ -234,7 +277,7 @@ app.put('/api/orders/:id/add-good', async (req, res) => {
 })
 
 // PUT редагувати товар в замовленні
-app.put('/api/orders/:orderId/goods/:goodId', async (req, res) => {
+app.put('/api/orders/:orderId/goods/:goodId', authenticateToken,  async (req, res) => {
   try {
     const orderId = req.params.orderId
     const goodId = req.params.goodId
@@ -280,7 +323,7 @@ app.put('/api/orders/:orderId/goods/:goodId', async (req, res) => {
 })
 
 // DELETE: Видалити замовлення
-app.delete('/api/orders/:id', async (req, res) => {
+app.delete('/api/orders/:id', authenticateToken, async (req, res) => {
   try {
     const orderId = req.params.id
     const deletionResult = await ordersData.deleteOrder(orderId)
@@ -296,7 +339,7 @@ app.delete('/api/orders/:id', async (req, res) => {
 const materialsData = new MaterialsDataAccess()
 
 // GET: Отримати всі матеріали
-app.get('/api/materials', async (req, res) => {
+app.get('/api/materials', authenticateToken, async (req, res) => {
   try {
     const allMaterials = await materialsData.getAllMaterials()
     res.json(allMaterials)
@@ -307,7 +350,7 @@ app.get('/api/materials', async (req, res) => {
 })
 
 // POST: Додати нові матеріали
-app.post('/api/materials', async (req, res) => {
+app.post('/api/materials', authenticateToken, async (req, res) => {
   try {
     const newMaterials = req.body
 
@@ -326,7 +369,7 @@ app.post('/api/materials', async (req, res) => {
 })
 
 // PUT: Оновити існуючий матеріал
-app.put('/api/materials/:id', async (req, res) => {
+app.put('/api/materials/:id', authenticateToken,  async (req, res) => {
   try {
     const materialId = req.params.id
     const updatedData = req.body
@@ -342,7 +385,7 @@ app.put('/api/materials/:id', async (req, res) => {
 })
 
 // PUT: Оновити існуючі матеріали
-app.put('/api/materials', async (req, res) => {
+app.put('/api/materials', authenticateToken, async (req, res) => {
   try {
     const updatedMaterials = req.body
     const materialIds = updatedMaterials.map(material => material._id)
@@ -360,7 +403,7 @@ app.put('/api/materials', async (req, res) => {
 })
 
 // DELETE: Видалити матеріал
-app.delete('/api/materials/:id', async (req, res) => {
+app.delete('/api/materials/:id', authenticateToken, async (req, res) => {
   try {
     const materialId = req.params.id
     const deletionResult = await materialsData.deleteMaterial(materialId)
@@ -372,7 +415,7 @@ app.delete('/api/materials/:id', async (req, res) => {
 })
 
 // GET: Пошук матеріалів за параметрами
-app.get('/api/materials/search', async (req, res) => {
+app.get('/api/materials/search', authenticateToken, async (req, res) => {
   try {
     const searchParams = req.query // Отримайте параметри пошуку з запиту
     const foundMaterials = await materialsData.findMaterial(searchParams)
@@ -388,7 +431,7 @@ app.get('/api/materials/search', async (req, res) => {
 const goodsData = new GoodsDataAccess()
 
 // GET: Отримати всі товари або пошук за товарами
-app.get('/api/goods', async (req, res) => {
+app.get('/api/goods', authenticateToken, async (req, res) => {
   try {
     const searchParams = req.query
 
@@ -458,7 +501,7 @@ app.get('/api/goods', async (req, res) => {
 })
 
 // POST: Додати новий товар або оновити існуючий
-app.post('/api/goods', async (req, res) => {
+app.post('/api/goods', authenticateToken, async (req, res) => {
   try {
     const newGoodData = req.body
 
@@ -467,7 +510,9 @@ app.post('/api/goods', async (req, res) => {
       a: newGoodData.a,
       b: newGoodData.b,
       material: newGoodData.material,
-      colorCode: newGoodData.color?.map(color => `${color.name}:${color.qty}`).join(', ')
+      colorCode: newGoodData.color
+        ?.map(color => `${color.name}:${color.qty}`)
+        .join(', ')
     })
 
     if (existingGood.length > 0) {
@@ -484,7 +529,8 @@ app.post('/api/goods', async (req, res) => {
       // Якщо товар не існує, додати новий
       newGoodData._id = new mongoose.Types.ObjectId()
       newGoodData.goodArea = +newGoodData.a * +newGoodData.b * +newGoodData.qty
-      newGoodData.colorCode = newGoodData.color?.map(color => `${color.name}:${color.qty}`)
+      newGoodData.colorCode = newGoodData.color
+        ?.map(color => `${color.name}:${color.qty}`)
         .join(', ')
 
       const createdGood = await goodsData.addNewGood(newGoodData)
@@ -498,7 +544,7 @@ app.post('/api/goods', async (req, res) => {
 })
 
 // PUT: Оновити існуючий товар
-app.put('/api/goods/:id', async (req, res) => {
+app.put('/api/goods/:id', authenticateToken, async (req, res) => {
   try {
     const goodId = req.params.id
     const updatedData = req.body
@@ -512,7 +558,7 @@ app.put('/api/goods/:id', async (req, res) => {
 })
 
 // DELETE: Видалити товар
-app.delete('/api/goods/:id', async (req, res) => {
+app.delete('/api/goods/:id', authenticateToken, async (req, res) => {
   try {
     const goodId = req.params.id
     const deletionResult = await goodsData.deleteGood(goodId)
@@ -524,7 +570,7 @@ app.delete('/api/goods/:id', async (req, res) => {
 })
 
 // GET: Пошук товарів за параметрами
-app.get('/api/goods/search', async (req, res) => {
+app.get('/api/goods/search', authenticateToken, async (req, res) => {
   try {
     const searchParams = req.query // Отримайте параметри пошуку з запиту
     const foundGoods = await goodsData.findGood(searchParams)
@@ -540,7 +586,7 @@ app.get('/api/goods/search', async (req, res) => {
 const productionData = new ProductionDataAccess()
 
 // GET: Отримати всі виробництва
-app.get('/api/production', async (req, res) => {
+app.get('/api/production', authenticateToken, async (req, res) => {
   try {
     const allProductions = await productionData.getAllProductions()
     res.json(allProductions)
@@ -551,7 +597,7 @@ app.get('/api/production', async (req, res) => {
 })
 
 // GET: Отримати одне виробництво
-app.get('/api/production/:name', async (req, res) => {
+app.get('/api/production/:name', authenticateToken, async (req, res) => {
   try {
     const productionName = req.params.name
     const production = await productionData.getProduction(productionName)
@@ -563,7 +609,7 @@ app.get('/api/production/:name', async (req, res) => {
 })
 
 // POST: Додати нове виробництво
-app.post('/api/production', async (req, res) => {
+app.post('/api/production', authenticateToken, async (req, res) => {
   try {
     const newProduction = req.body
     newProduction._id = new mongoose.Types.ObjectId()
@@ -576,7 +622,7 @@ app.post('/api/production', async (req, res) => {
 })
 
 // PUT: Оновити існуюче виробництво
-app.put('/api/production/:id', async (req, res) => {
+app.put('/api/production/:id', authenticateToken, async (req, res) => {
   try {
     const productionId = req.params.id
     const updatedData = req.body
@@ -604,7 +650,7 @@ app.put('/api/production/:id', async (req, res) => {
 })
 
 // PUT: Додати матеріал на виробництво
-app.put('/api/production/:id/materials', async (req, res) => {
+app.put('/api/production/:id/materials', authenticateToken, async (req, res) => {
   try {
     const productionId = req.params.id
     const updatedData = req.body
@@ -651,7 +697,7 @@ app.put('/api/production/:id/materials', async (req, res) => {
 })
 
 // POST: Додати товар на виробництво
-app.post('/api/production/:id/goods', async (req, res) => {
+app.post('/api/production/:id/goods', authenticateToken, async (req, res) => {
   try {
     const productionId = req.params.id
     const newGoodData = req.body
@@ -696,7 +742,7 @@ app.post('/api/production/:id/goods', async (req, res) => {
 })
 
 // PUT редагувати товар на виробництві
-app.put('/api/production/:productionId/goods/:goodId', async (req, res) => {
+app.put('/api/production/:productionId/goods/:goodId', authenticateToken, async (req, res) => {
   try {
     const productionId = req.params.productionId
     const goodId = req.params.goodId
@@ -741,7 +787,7 @@ app.put('/api/production/:productionId/goods/:goodId', async (req, res) => {
 })
 
 // PUT видалити товар з виробництва
-app.put('/api/production/:id/remove-good/:goodId', async (req, res) => {
+app.put('/api/production/:id/remove-good/:goodId', authenticateToken, async (req, res) => {
   try {
     const productionId = req.params.id
     const goodIdToRemove = req.params.goodId
@@ -758,7 +804,7 @@ app.put('/api/production/:id/remove-good/:goodId', async (req, res) => {
 })
 
 // DELETE: Видалити виробництво
-app.delete('/api/production/:id', async (req, res) => {
+app.delete('/api/production/:id', authenticateToken, async (req, res) => {
   try {
     const productionId = req.params.id
     const deletionResult = await productionData.deleteProduction(productionId)
