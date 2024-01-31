@@ -54,7 +54,7 @@ app.post('/api/login', async (req, res) => {
     const { login, password } = req.body
     const user = await usersData.userCheck(login, password)
     const token = sign({ userId: user._id }, process.env.SECRET_KEY, {
-      // expiresIn: '1h'
+      expiresIn: '1d'
     })
     res.status(200).json({ token })
   } catch (error) {
@@ -84,6 +84,11 @@ function authenticateToken (req, res, next) {
     next()
   })
 }
+
+// GET: Перевірка токена
+app.get('/api/check-token', authenticateToken, (req, res) => {
+  res.json({ message: 'Token is valid' })
+})
 
 
 // ЗАМОВЛЕННЯ
