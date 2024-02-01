@@ -54,7 +54,7 @@ app.post('/api/login', async (req, res) => {
     const { login, password } = req.body
     const user = await usersData.userCheck(login, password)
     const token = sign({ userId: user._id }, process.env.SECRET_KEY, {
-      expiresIn: '1d'
+      expiresIn: '7d'
     })
     res.status(200).json({ token })
   } catch (error) {
