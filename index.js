@@ -9,6 +9,8 @@ import ProductionDataAccess from './production/DataAccess.js'
 import UsersDataAccess from './users/DataAccess.js'
 import escapeStringRegexp from 'escape-string-regexp'
 import jwt from 'jsonwebtoken'
+import ColorsDataAccess from './colors/DataAccess.js'
+import ColorSchemesDataAccess from './colorSchemes/DataAccess.js'
 const { sign, verify } = jwt
 
 
@@ -819,3 +821,37 @@ app.delete('/api/production/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Помилка сервера' })
   }
 })
+
+// Кольори
+
+// GET: Отримати всі кольори
+
+const colorData = new ColorsDataAccess
+
+app.get('/api/colors', async (req, res) => {
+  try {
+    const colors = await colorData.getColors()
+    res.json(colors)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+// Схеми кольорів
+
+// GET: Отримати всі схеми кольорів
+
+const colorSchemesData = new ColorSchemesDataAccess
+
+app.get('/api/color-schemes', async (req, res) => {
+  try {
+    const colorSchemes = await colorSchemesData.getColorSchemes()
+    res.json(colorSchemes)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Помилка сервера' })
+  }
+})
+
+
