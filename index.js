@@ -37,7 +37,7 @@ const main = async () => {
         }
         process.exit(1)
       }
-      console.log(`Server is running on port http://localhost:${PORT}`)
+      console.log(`Server is running on port ${PORT}`)
     })
   } catch (err) {
     console.error(err)
@@ -122,7 +122,7 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
 
     if (Object.keys(searchParams).length === 0) {
       // If there are no search parameters, get first 10 of all orders
-      resultOrders = (await ordersData.getAllOrders()).toReversed().slice(0, 10)
+      resultOrders = (await ordersData.getAllOrders())?.toReversed().slice(0, 10)
     } else {
       // If there are search parameters, construct a query object
       const query = {}
@@ -152,12 +152,12 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
       }
 
       // Find orders based on the constructed query
-      resultOrders = (await ordersData.findOrder(query)).toReversed()
+      resultOrders = (await ordersData.findOrder(query))?.toReversed()
     }
 
     // Check for all parameter
     if (searchParams.all) {
-      resultOrders = (await ordersData.getAllOrders()).toReversed()
+      resultOrders = (await ordersData.getAllOrders())?.toReversed()
     }
 
     res.json(resultOrders)
