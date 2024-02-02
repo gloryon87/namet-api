@@ -1,4 +1,4 @@
-import colorSchemesSchema from "./schema.js"
+import ColorSchemes from "./schema.js"
 
 class ColorSchemesDataAccess {
   async getColorSchemes() {
