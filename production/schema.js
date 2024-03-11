@@ -19,6 +19,7 @@ const productionSchema = new mongoose.Schema(
         orderContacts: String,
         season: String,
         material: String,
+        code: String,
         state: String,
         color: [
           {

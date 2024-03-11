@@ -15,6 +15,7 @@ const ordersSchema = new mongoose.Schema(
         delivered: Number,
         season: String,
         material: String,
+        code: String,
         color: [
           {
             name: String,
