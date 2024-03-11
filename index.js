@@ -147,7 +147,8 @@ app.get('/api/orders', authenticateToken, async (req, res) => {
           { contacts: { $regex: escapedSearch, $options: 'i' } },
           { 'goods.season': { $regex: escapedSearch, $options: 'i' } },
           { 'goods.material': { $regex: escapedSearch, $options: 'i' } },
-          { 'goods.production': { $regex: escapedSearch, $options: 'i' } }
+          { 'goods.production': { $regex: escapedSearch, $options: 'i' } },
+          { 'goods.code': { $regex: escapedSearch, $options: 'i' } }
         ]
       }
 
@@ -479,6 +480,7 @@ app.get('/api/goods', authenticateToken, async (req, res) => {
         query.$or = [
           { material: { $regex: escapedSearch, $options: 'i' } },
           { season: { $regex: escapedSearch, $options: 'i' } },
+          { code: { $regex: escapedSearch, $options: 'i' } },
           { 'deliveries.date': { $regex: escapedSearch, $options: 'i' } },
           { 'deliveries.orderId': { $regex: escapedSearch, $options: 'i' } },
           {
